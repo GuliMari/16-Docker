@@ -9,9 +9,38 @@
 Создаем `Dockerfile` для кастомного образа `nginx`:
 
 ```dockerfile
-FROM alpine:3.16
-RUN apk add nginx
+FROM alpine:latest
+RUN apk -U upgrade && apk add nginx
+COPY index.html /usr/share/nginx/html/
 COPY default.conf /etc/nginx/http.d/
-COPY index.html /usr/share/nginx/html
 CMD ["nginx", "-g", "daemon off;"]
+```
+Собираем образ и запускаем контейнер:
+
+```bash
+tw4@tw4-mint:~/docker/nginx$ docker build -t myng .
+Sending build context to Docker daemon  6.144kB
+Step 1/5 : FROM alpine:latest
+...
+Successfully built 3f96c0d4362c
+Successfully tagged myng:latest
+tw4@tw4-mint:~/docker/nginx$ docker run -d -p 8080:80 myng
+bb2431d40f58d0aee3c2052ef0749c23eb8e4ac674a483bd2139a84c11bfd50c
+```
+
+Проверяем работоспособность контейнера:
+```bash
+tw4@tw4-mint:~/docker/nginx$ curl localhost:8080
+<!DOCTYPE html>
+<html>
+<head>
+        <title> Custom NGINX </title>
+</head>
+<body>
+        <body style=text-align:center;background-color:rgb(5,73,17);font-weight:900;font-size:20px;font-family:Helvetica,Arial,sans-serif>
+        <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png">
+        <h1> Welcome to my custom nginx webpage hosted in a Docker container </h1>
+        <p> This container was deployed: <div id="date"></div></p>
+</body>
+</html>
 ```
