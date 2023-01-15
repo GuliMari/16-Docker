@@ -59,5 +59,85 @@ tw4@tw4-mint:~/docker/nginx$ curl localhost:8080
 - После запуска nginx должен показывать php info.
 - Все собранные образы должны быть в docker hub
 
+Создадим папку `nginx-php` со следующим содержимым:
+```bash
+tw4@tw4-mint:~/docker/nginx-php$ tree
+.
+├── default.conf
+├── docker-compose.yml
+└── html
+    └── index.php
+```
+
+
+Создадим файл `docker-compose.yml`:
+
+```yml
+version: "3"
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./html:/var/html
+    networks:
+      - nginxphp
+
+  php:
+    image: php:fpm
+    expose:
+      - 9000
+    volumes:
+      - ./html:/var/html
+    networks:
+      - nginxphp
+
+networks:
+  nginxphp:
+```
+
+С помощью `docker-compose` запускаем наши контейнеры:
+```bash
+w4@tw4-mint:~/docker/nginx-php$ docker-compose up -d
+Creating network "nginx-php_nginxphp" with the default driver
+Creating nginx-php_web_1 ... done
+Creating nginx-php_php_1 ... done
+tw4@tw4-mint:~/docker/nginx-php$ docker-compose ps
+     Name                  Command             State             Ports          
+--------------------------------------------------------------------------------
+nginx-php_php_1   docker-php-entrypoint php-   Up      9000/tcp                 
+                  fpm                                                           
+nginx-php_web_1   /docker-entrypoint.sh ngin   Up      0.0.0.0:8080-            
+                  ...                                  >80/tcp,:::8080->80/tcp 
+```
+
+Проверяем работоспособность:
+```bash
+tw4@tw4-mint:~/docker/nginx-php$ curl localhost:8080
+<!DOCTYPE html>
+<head>
+    <title>Test</title>
+</head>
+
+<body>
+    <h1>PHPINFO</h1>
+    <p><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<style type="text/css">
+body {background-color: #fff; color: #222; font-family: sans-serif;}
+pre {margin: 0; font-family: monospace;}
+a:link {color: #009; text-decoration: none; background-color: #fff;}
+a:hover {text-decoration: underline;}
+table {border-collapse: collapse; border: 0; width: 934px; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2);}
+.center {text-align: center;}
+.center table {margin: 1em auto; text-align: left;}
+.center th {text-align: center !important;}
+td, th {border: 1px solid #666; font-size: 75%; vertical-align: baseline; padding: 4px 5px;}
+th {position: sticky; top: 0; background: inherit;}
+h1 {font-size: 150%;}
+....
+```
 
 
